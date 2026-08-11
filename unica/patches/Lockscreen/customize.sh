@@ -16,36 +16,8 @@ WORK_SCOPE="${WORK_DIR:-${TARGET_DIR:-$PROJECT_ROOT/out}}"
 
 echo "[+] Project Root : $PROJECT_ROOT"
 echo "[+] Search Scope : $WORK_SCOPE"
-
 # ------------------------------------------------------------------------------
-# 2. Tìm và Patch floating_feature.xml (Giới hạn trong $WORK_SCOPE)
-# ------------------------------------------------------------------------------
-FLOATING_FEATURE=$(find "$WORK_SCOPE" -type f -name "floating_feature.xml" 2>/dev/null | head -n 1)
-
-if [ -n "$FLOATING_FEATURE" ] && [ -f "$FLOATING_FEATURE" ]; then
-    echo "[+] Found floating_feature.xml at: $FLOATING_FEATURE"
-    
-    # Ép kiểu CROP về CENTER_CROP
-    if ! grep -q "SecFloatingFeature_Lockscreen_Config_WallpaperCropType" "$FLOATING_FEATURE"; then
-        sed -i '/<\/SecFloatingFeatureSet>/i \    <SecFloatingFeature_Lockscreen_Config_WallpaperCropType>CENTER_CROP<\/SecFloatingFeature_Lockscreen_Config_WallpaperCropType>' "$FLOATING_FEATURE"
-        echo "  --> Patched: Lockscreen WallpaperCropType set to CENTER_CROP"
-    else
-        echo "  --> WallpaperCropType already patched."
-    fi
-
-    # Tắt tự động biến dạng SubDisplay Video
-    if ! grep -q "SecFloatingFeature_Wallpaper_SupportSubDisplayVideoWallpaper" "$FLOATING_FEATURE"; then
-        sed -i '/<\/SecFloatingFeatureSet>/i \    <SecFloatingFeature_Wallpaper_SupportSubDisplayVideoWallpaper>false<\/SecFloatingFeature_Wallpaper_SupportSubDisplayVideoWallpaper>' "$FLOATING_FEATURE"
-        echo "  --> Patched: SupportSubDisplayVideoWallpaper set to false"
-    else
-        echo "  --> SupportSubDisplayVideoWallpaper already patched."
-    fi
-else
-    echo "[!] Warning: floating_feature.xml not found in $WORK_SCOPE"
-fi
-
-# ------------------------------------------------------------------------------
-# 3. Tìm và chèn Properties vào build.prop thuộc WORK_SCOPE
+#  Tìm và chèn Properties vào build.prop thuộc WORK_SCOPE
 # ------------------------------------------------------------------------------
 PROP_FILE=$(find "$WORK_SCOPE" -type f \( -name "build.prop" -o -name "system.prop" \) 2>/dev/null | head -n 1)
 
@@ -55,7 +27,7 @@ if [ -n "$PROP_FILE" ] && [ -f "$PROP_FILE" ]; then
     if ! grep -q "ARTISANROM LOCKSCREEN VIDEO FIX" "$PROP_FILE"; then
         cat << 'EOF' >> "$PROP_FILE"
 
-# ARTISANROM LOCKSCREEN VIDEO FIX
+# BenlyROM LOCKSCREEN VIDEO FIX
 ro.config.wallpaper_crop_type=0
 persist.sys.wallpaper.crop=1
 ro.samsung.wallpaper.video_fit_screen=false
@@ -85,4 +57,4 @@ if [ -f "$TARGET_SMALI" ]; then
     echo "[+] Done patching Smali!"
 fi
 
-echo "[+] ArtisanROM Lockscreen Video Fix Completed!"
+echo "[+] BenlyROM Lockscreen Video Fix Completed!"

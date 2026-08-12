@@ -1,4 +1,4 @@
 id=uwb
 name=UWB blobs
-author=salvogiangri
+author=salvogiangri&binh24
 description=Adds UWB blobs if target device is capable.

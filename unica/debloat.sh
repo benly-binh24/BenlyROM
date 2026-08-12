@@ -105,29 +105,14 @@ PRODUCT_DEBLOAT+="
 app/BardShell
 "
 
-# Gmail
-PRODUCT_DEBLOAT+="
-app/Gmail2
-"
-
 # Google Assistant shortcut
 PRODUCT_DEBLOAT+="
 app/AssistantShell
 "
 
-# Google Chrome
-PRODUCT_DEBLOAT+="
-app/Chrome
-"
-
 # Google Duo
 PRODUCT_DEBLOAT+="
 app/DuoStub
-"
-
-# Google Maps
-PRODUCT_DEBLOAT+="
-app/Maps
 "
 
 # Google PAI (Play Autoinstall)
@@ -147,11 +132,6 @@ SYSTEM_DEBLOAT+="$(find "$WORK_DIR/system" -type d -name "*TTSVoice*" | sed "s|$
 # Samsung Kids
 SYSTEM_DEBLOAT+="
 system/app/KidsHome_Installer
-"
-
-# Samsung Notes
-SYSTEM_DEBLOAT+="
-system/app/Notes40
 "
 
 # Bixby
@@ -242,16 +222,6 @@ system/priv-app/AvatarEmojiSticker
 system/priv-app/StickerFaceARAvatar
 "
 
-# Samsung Calendar
-SYSTEM_DEBLOAT+="
-system/app/SamsungCalendar
-"
-
-# Samsung Clock
-SYSTEM_DEBLOAT+="
-system/app/ClockPackage
-"
-
 # Samsung Free
 SYSTEM_DEBLOAT+="
 system/app/MinusOnePage
@@ -281,11 +251,6 @@ system/etc/sysconfig/samsungauthframework.xml
 system/etc/sysconfig/samsungpassapp.xml
 system/priv-app/AuthFramework
 system/priv-app/SamsungPass
-"
-
-# Samsung Reminder
-SYSTEM_DEBLOAT+="
-system/app/SmartReminder
 "
 
 # Samsung Visit In

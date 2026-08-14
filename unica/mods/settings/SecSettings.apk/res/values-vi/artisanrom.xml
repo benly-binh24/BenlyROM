@@ -1,21 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="artisanrom_about_description">BenlyROM là một bản ROM tùy chỉnh dựa vào UN1CA cho các thiết bị Samsung Galaxy Note 20 Ultra.
+    <string name="artisanrom_about_description">BenlyROM là một bản ROM tùy chỉnh dựa vào UN1CA cho các thiết bị Exynos 990 Samsung Galaxy Note 20 Ultra.
 
-Bản ROM này được xây dựng dựa trên phiên bản giao diện OneUI 8.0 với nhiều tùy biến.
-
-BenlyROM Quant hỗ trợ các thiết bị sử dụng vi xử lý (SoC) Exynos 990.
+BenlyROM này được xây dựng dựa trên phiên bản giao diện OneUI 8.0 với nhiều tùy biến.
 
 &#160;</string>
     <string name="maintainer_16_name">Binh24</string>
     <string name="maintainer_16_role">Trưởng nhóm ROM</string>
     <string name="maintainer_16_github">binh24</string>
     <string name="maintainer_16_avatar">binh24_avatar</string>
-
-    <string name="maintainer_16_name">Benly</string>
-    <string name="maintainer_16_role">Biên dịch và sữa lỗi</string>
-    <string name="maintainer_16_github">benly-binh24</string>
-    <string name="maintainer_16_avatar">user_avatar</string>
 
     <string name="maintainer_1_name">Android Artisan</string>
     <string name="maintainer_1_role">Phát triển Artisan</string>

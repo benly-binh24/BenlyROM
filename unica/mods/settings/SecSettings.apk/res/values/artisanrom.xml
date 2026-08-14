@@ -2,9 +2,9 @@
 <resources>
     <string name="artisanrom_about_description">BenlyROM is a work-in-progress custom firmware for Samsung Galaxy devices.
 
-It\'s based on the latest and greatest iteration of Samsung\'s UX and it also includes additional features and tweaks to ensure the best possible experience out of the box.
+It\'s based on new OneUI 8.0 includes additional features and tweaks to ensure the best possible experience out of the box.
 
-BenlyROM Quant supports devices using the Exynos 990 SoC
+BenlyROM supports devices using the Exynos 990 SoC
 
 &#160;</string>
 
@@ -12,11 +12,6 @@ BenlyROM Quant supports devices using the Exynos 990 SoC
     <string name="maintainer_16_role">Lead Developer</string>
     <string name="maintainer_16_github">binh24</string>
     <string name="maintainer_16_avatar">binh24_avatar</string>
-
-    <string name="maintainer_16_name">Benly</string>
-    <string name="maintainer_16_role">Biên dịch và sữa lỗi</string>
-    <string name="maintainer_16_github">benly-binh24</string>
-    <string name="maintainer_16_avatar">user_avatar</string>
 
     <string name="maintainer_1_name">Android Artisan</string>
     <string name="maintainer_1_role">Artisan Developer</string>

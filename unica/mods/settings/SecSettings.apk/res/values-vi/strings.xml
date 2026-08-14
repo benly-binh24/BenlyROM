@@ -56,8 +56,8 @@
     <string name="unica_updates_title">Cập nhật ROM</string>
     <string name="unica_vulkan_summary">Không ổn định và có thể gây ra vấn đề!</string>
     <string name="unica_vulkan_title">Bật trình hiển thị Vulkan</string>
-    <string name="unica_oneui85_title">Bật giao diện OneUI 8.5</string>
-    <string name="unica_oneui85_summary">Hiển thị thiết kế OneUI 8.5 trong Cài đặt</string>
+    <string name="unica_oneui85_title">Bật OneUI 8.5 trong Cài đặt</string>
+    <string name="unica_oneui85_summary">Giao diện OneUI 8.5 trong Cài đặt</string>
     <string name="unica_oneui85_system_title">Kích hoạt kiểu OneUI 8.5</string>
     <string name="unica_oneui85_system_summary">Hiển thị thiết kế OneUI 8.5 trên toàn hệ thống - Thử nghiệm</string>
     <string name="unica_about_artisanrom_title">Thông tin ROM</string>

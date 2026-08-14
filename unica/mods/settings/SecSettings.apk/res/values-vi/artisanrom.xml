@@ -1,20 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="artisanrom_about_description">BenlyROM là một bản ROM tùy chỉnh dựa vào UN1CA cho Samsung Galaxy Note 20 Ultra.
+    <string name="artisanrom_about_description">BenlyROM là một bản ROM tùy chỉnh dựa vào UN1CA cho các thiết bị Samsung Galaxy Note 20 Ultra.
 
 Bản ROM này được xây dựng dựa trên phiên bản giao diện OneUI 8.0 với nhiều tùy biến.
 
-BenlyROM hỗ trợ các thiết bị sử dụng vi xử lý (SoC) Exynos 990.
+BenlyROM Quant hỗ trợ các thiết bị sử dụng vi xử lý (SoC) Exynos 990.
 
 &#160;</string>
+    <string name="maintainer_16_name">Binh24</string>
+    <string name="maintainer_16_role">Trưởng nhóm ROM</string>
+    <string name="maintainer_16_github">binh24</string>
+    <string name="maintainer_16_avatar">binh24_avatar</string>
+
+    <string name="maintainer_16_name">Benly</string>
+    <string name="maintainer_16_role">Biên dịch và sữa lỗi</string>
+    <string name="maintainer_16_github">benly-binh24</string>
+    <string name="maintainer_16_avatar">user_avatar</string>
 
     <string name="maintainer_1_name">Android Artisan</string>
-    <string name="maintainer_1_role">Phát triển / ArtisanRom</string>
+    <string name="maintainer_1_role">Phát triển Artisan</string>
     <string name="maintainer_1_github">Android-Artisan</string>
     <string name="maintainer_1_avatar">artisan_avatar</string>
     
     <string name="maintainer_2_name">GhasemzadehFard-dev</string>
-    <string name="maintainer_2_role">Người duy trì / Nhà phát triển r8s</string>
+    <string name="maintainer_2_role">Nhà phát triển r8s</string>
     <string name="maintainer_2_github">GhasemzadehFard-dev</string>
     <string name="maintainer_2_avatar">mohammad_avatar</string>
     
@@ -28,34 +37,18 @@ BenlyROM hỗ trợ các thiết bị sử dụng vi xử lý (SoC) Exynos 990.
     <string name="maintainer_4_github">ExtremeXT</string>
     <string name="maintainer_4_avatar">extremext_avatar</string>
     
-	<string name="maintainer_16_name">Binh24</string>
-    <string name="maintainer_16_role">Biên dịch và sữa lỗi</string>
-    <string name="maintainer_16_github">binh24</string>
-    <string name="maintainer_16_avatar">binh24_avatar</string>
-	
-    <string name="maintainer_5_name">Cheroo316</string>
-    <string name="maintainer_5_role">Người thử / Quản trị viên</string>
-    <string name="maintainer_5_github">Chero316</string>
-    <string name="maintainer_5_avatar">cheroo_avatar</string>
-    
-    <string name="maintainer_6_name">Mesazane</string>
-    <string name="maintainer_6_role">Người thử / Nhà phát triển</string>
-    <string name="maintainer_6_github">mesazane</string>
-    <string name="maintainer_6_avatar">mesa_avatar</string>
-    
-    <string name="maintainer_7_name">Chomik</string>
-    <string name="maintainer_7_role">Người thử / Người hỗ trợ</string>
-    <string name="maintainer_7_github">chomik4305</string>
-    <string name="maintainer_7_avatar">chomik_avatar</string>
-     
     <string name="maintainer_10_name">Miguel Barreto</string>
     <string name="maintainer_10_role">Người thử / Recognised Troll / KRNL Dev</string>
     <string name="maintainer_10_github">miguelbarretoo</string>
     <string name="maintainer_10_avatar">miguel_avatar</string>
+    
+    <string name="maintainer_14_name">mrd83</string>
+    <string name="maintainer_14_role">Nhà phát triển</string>
+    <string name="maintainer_14_github">mrd83</string>
+    <string name="maintainer_14_avatar">mrd83_avatar</string>
 
     <string name="maintainer_15_name">Milena</string>
     <string name="maintainer_15_role">Nhà phát triển</string>
     <string name="maintainer_15_github"></string>
     <string name="maintainer_15_avatar">fishe_avatar</string>
-
 </resources>

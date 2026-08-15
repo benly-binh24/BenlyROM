@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Unica Patch Engine Script - BenlyROM  Lockscreen Video Fix (Advanced)
+# Unica Patch Engine Script - BenlyROM Lockscreen Video Fix (Advanced)
 # Path: /unica/patches/Lockscreen/customize.sh
 # ==============================================================================
+
+set -e
 
 echo "[+] Starting Advanced Lockscreen Video Fix Patch..."
 
@@ -16,54 +18,36 @@ WORK_SCOPE="${WORK_DIR:-${TARGET_DIR:-$PROJECT_ROOT/out}}"
 echo "[+] Project Root : $PROJECT_ROOT"
 echo "[+] Search Scope : $WORK_SCOPE"
 
+# Kiểm tra xem thư mục out/work scope có tồn tại không
+if [ ! -d "$WORK_SCOPE" ]; then
+    echo "[-] Warning: Work scope directory not found: $WORK_SCOPE"
+    echo "[-] Skipping property injection."
+    exit 0
+fi
+
 # ------------------------------------------------------------------------------
-# 2. Inject Properties vào toàn bộ các file prop có thể (build.prop, product.prop, v.v.)
+# 2. Inject Properties vào toàn bộ các file prop có sẵn trong ROM
 # ------------------------------------------------------------------------------
-find "$WORK_SCOPE" -type f \( -name "build.prop" -o -name "system.prop" -o -name "product.prop" \) 2>/dev/null | while read -r PROP_FILE; do
+INJECTED_COUNT=0
+
+while IFS= read -r -d '' PROP_FILE; do
     if [ -f "$PROP_FILE" ]; then
-        if ! grep -q "BenlyROM  LOCKSCREEN VIDEO FIX" "$PROP_FILE"; then
+        if ! grep -q "BenlyROM LOCKSCREEN VIDEO FIX" "$PROP_FILE"; then
             echo "[+] Injecting wallpaper properties into: $PROP_FILE"
             cat << 'EOF' >> "$PROP_FILE"
 
-# BenlyROM  LOCKSCREEN VIDEO FIX
-ro.config.wallpaper_crop_type=0
-persist.sys.wallpaper.crop=1
+# BenlyROM LOCKSCREEN VIDEO FIX
+# Ép buộc tắt tính năng tự động fit màn hình lệch tỷ lệ của Samsung
 ro.samsung.wallpaper.video_fit_screen=false
-vendor.display.enable_lockscreen_scaling=true
-ro.wallpaper.rescale=false
-config.disable_lockscreen_wallpaper_crop=false
-ro.lockscreen.wallpaper.fps=60
-ro.config.lockscreen_wallpaper=true
+persist.sys.wallpaper.force_crop=false
+persist.wallpaper.exact_matched_caching=true
+# Cố định kích thước khung render của SurfaceFlinger ở độ phân giải gốc
+debug.sf.fusion_pd_enabled=0
 EOF
+            INJECTED_COUNT=$((INJECTED_COUNT + 1))
         fi
     fi
-done
+done < <(find "$WORK_SCOPE" -type f \( -name "build.prop" -o -name "system.prop" -o -name "product.prop" -o -name "vendor.prop" \) -print0 2>/dev/null)
 
-# ------------------------------------------------------------------------------
-# 3. Quét thông minh tìm file Smali điều khiển Video Lockscreen trong SystemUI
-# ------------------------------------------------------------------------------
-echo "[+] Searching for Lockscreen Video/Player Smali files in SystemUI..."
-
-# Tìm tất cả các file smali liên quan đến Player hoặc Video trong SystemUI của bản build
-TARGET_SMALIS=$(find "$WORK_SCOPE" -type f -path "*/SystemUI.apk/*" \( -name "*VideoController*.smali" -o -name "*Player*.smali" -o -name "*Keyguard*Wallpaper*.smali" \) 2>/dev/null)
-
-if [ -n "$TARGET_SMALIS" ]; then
-    echo "$TARGET_SMALIS" | while read -r TARGET_SMALI; do
-        if [ -f "$TARGET_SMALI" ]; then
-            # Kiểm tra nếu file chứa đoạn mã gán hằng số liên quan đến player video thì tiến hành patch
-            if grep -q "const/4" "$TARGET_SMALI"; then
-                echo "[+] Patching target smali: $TARGET_SMALI"
-                
-                # Thực hiện thay thế các biến cấu hình hiển thị video/scaler (nâng cấp từ 0x1 lên 0x2 hoặc ép giá trị fit)
-                sed -i 's/const\/4 v[0-9], 0x1/const\/4 v1, 0x2/g' "$TARGET_SMALI"
-                sed -i 's/const\/16 v[0-9], 0x1/const\/16 v1, 0x2/g' "$TARGET_SMALI"
-                
-                echo "    --> Patched successfully!"
-            fi
-        fi
-    done
-else
-    echo "[!] Notice: Specific Player Smali not found via standard pattern. Properties injection will handle the scaling fallback."
-fi
-
-echo "[+] BenlyROM  Lockscreen Video Fix Completed Successfully!"
+echo "[+] Successfully injected properties into $INJECTED_COUNT file(s)."
+echo "[+] BenlyROM Lockscreen Video Fix Completed Successfully!"

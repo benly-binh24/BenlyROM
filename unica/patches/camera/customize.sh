@@ -86,10 +86,36 @@ if grep -q "SUPPORT_SINGLE_TAKE_HIGHLIGHT_VIDEOS.*true" "$FW_DIR/$SOURCE_FIRMWAR
 elif ! grep -q "SUPPORT_SINGLE_TAKE_HIGHLIGHT_VIDEOS.*true" "$FW_DIR/$SOURCE_FIRMWARE_PATH/system/system/cameradata/camera-feature.xml" 2> /dev/null && \
         grep -q "SUPPORT_SINGLE_TAKE_HIGHLIGHT_VIDEOS.*true" "$WORK_DIR/system/system/cameradata/camera-feature.xml" 2> /dev/null; then
     # TODO handle this condition
+    # shellcheck disable=SC2034
     SOURCE_SUPPORT_SINGLE_TAKE_HIGHLIGHT_VIDEOS=false
+    # shellcheck disable=SC2034
     TARGET_SUPPORT_SINGLE_TAKE_HIGHLIGHT_VIDEOS=true
     LOG_MISSING_PATCHES "SOURCE_SUPPORT_SINGLE_TAKE_HIGHLIGHT_VIDEOS" "TARGET_SUPPORT_SINGLE_TAKE_HIGHLIGHT_VIDEOS"
     unset SOURCE_SUPPORT_SINGLE_TAKE_HIGHLIGHT_VIDEOS TARGET_SUPPORT_SINGLE_TAKE_HIGHLIGHT_VIDEOS
+fi
+
+# SEC_PRODUCT_FEATURE_CAMERA_SINGLETAKE_SOLUTIONS
+if ! grep -q "ENABLE_SINGLE_TAKE_LITE.*true" "$WORK_DIR/system/system/cameradata/singletake/service-feature.xml" 2>/dev/null && \
+        ! grep -q "SUPPORT_SMART_CROP.*false" "$WORK_DIR/system/system/cameradata/singletake/service-feature.xml" 2>/dev/null; then
+    if [ -d "$FW_DIR/$SOURCE_FIRMWARE_PATH/vendor/etc/singletake/SmartCrop" ]; then
+        if [ ! -d "$WORK_DIR/vendor/etc/singletake/SmartCrop" ] || \
+                [ "$TARGET_PLATFORM_SDK_VERSION" -lt "$SOURCE_PLATFORM_SDK_VERSION" ]; then
+            ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" \
+                "etc/singletake/SmartCrop/SmartCrop.tflite" 0 0 644 "u:object_r:vendor_configs_file:s0"
+        fi
+    else
+        # TODO handle this condition
+        # shellcheck disable=SC2034
+        SOURCE_SUPPORT_SMART_CROP=false
+        # shellcheck disable=SC2034
+        TARGET_SUPPORT_SMART_CROP=true
+        LOG_MISSING_PATCHES "SOURCE_SUPPORT_SMART_CROP" "TARGET_SUPPORT_SMART_CROP"
+        unset SOURCE_SUPPORT_SMART_CROP TARGET_SUPPORT_SMART_CROP
+    fi
+else
+    if [ -d "$WORK_DIR/vendor/etc/singletake/SmartCrop" ]; then
+        DELETE_FROM_WORK_DIR "vendor" "etc/singletake/SmartCrop"
+    fi
 fi
 
 # SEC_PRODUCT_FEATURE_CAMERA_CONFIG_ACTION_CLASSIFIER
@@ -270,6 +296,10 @@ if [[ "$SOURCE_CAMERA_CONFIG_VENDOR_LIB_INFO" == *"hybridhdr.arcsoft.v1"* ]] && 
     DELETE_FROM_WORK_DIR "system" "system/lib64/libhybridHDR_wrapper.camera.samsung.so"
     DELETE_FROM_WORK_DIR "system" "system/lib64/libhybrid_high_dynamic_range.arcsoft.so"
 fi
+if [[ "$SOURCE_CAMERA_CONFIG_VENDOR_LIB_INFO" == *"image_enhance.arcsoft.v1"* ]] && \
+        [[ "$TARGET_CAMERA_CONFIG_VENDOR_LIB_INFO" != *"image_enhance.arcsoft.v1"* ]]; then
+    DELETE_FROM_WORK_DIR "system" "system/lib64/libimage_enhancement.arcsoft.so"
+fi
 if [[ "$SOURCE_CAMERA_CONFIG_VENDOR_LIB_INFO" == *"pro_single_rgb.mpi.v1"* ]] && \
         [[ "$TARGET_CAMERA_CONFIG_VENDOR_LIB_INFO" != *"pro_single_rgb.mpi.v1"* ]]; then
     DELETE_FROM_WORK_DIR "system" "system/lib64/libAIQSolution_MPISingleRGB40.camera.samsung.so"
@@ -300,7 +330,7 @@ if [[ "$SOURCE_CAMERA_CONFIG_VENDOR_LIB_INFO" == *"super_resolution_raw.arcsoft"
     DELETE_FROM_WORK_DIR "system" "system/lib64/libsuperresolutionraw_wrapper_v2.camera.samsung.so"
     DELETE_FROM_WORK_DIR "system" "system/lib64/libsuperresolution_raw.arcsoft.so"
 fi
-SOURCE_CAMERA_DOCUMENTSCAN_SOLUTIONS="$(GET_FLOATING_FEATURE_CONFIG "$FW_DIR/$SOURCE_FIRMWARE_PATH/system/system/etc/floating_feature.xml"  "SEC_FLOATING_FEATURE_CAMERA_DOCUMENTSCAN_SOLUTIONS")"
+SOURCE_CAMERA_DOCUMENTSCAN_SOLUTIONS="$(GET_FLOATING_FEATURE_CONFIG "$FW_DIR/$SOURCE_FIRMWARE_PATH/system/system/etc/floating_feature.xml" "SEC_FLOATING_FEATURE_CAMERA_DOCUMENTSCAN_SOLUTIONS")"
 TARGET_CAMERA_DOCUMENTSCAN_SOLUTIONS="$(GET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_CAMERA_DOCUMENTSCAN_SOLUTIONS")"
 if [[ "$SOURCE_CAMERA_DOCUMENTSCAN_SOLUTIONS" == *"AI_DEWARPING"* ]] && \
         [[ "$TARGET_CAMERA_DOCUMENTSCAN_SOLUTIONS" != *"AI_DEWARPING"* ]]; then
@@ -314,6 +344,15 @@ if [ -f "$WORK_DIR/system/system/lib64/libImageSegmenter_v1.camera.samsung.so" ]
         [ ! -d "$WORK_DIR/vendor/etc/portrait_data/LF_segmenter" ]; then
     DELETE_FROM_WORK_DIR "system" "system/lib64/libImageSegmenter_v1.camera.samsung.so"
 fi
+
+# Fix device model number in photo/video metadata
+while IFS= read -r f; do
+    HEX_PATCH "$f" "726f2e70726f647563742e6d6f64656c00" "726f2e626f6f742e656d2e6d6f64656c00"
+done < <(grep -r -w -l "ro.product.model" "$WORK_DIR/vendor" | grep "camera")
+HEX_PATCH "$WORK_DIR/system/system/lib/libstagefright.so" \
+    "726f2e70726f647563742e6d6f64656c00" "726f2e626f6f742e656d2e6d6f64656c00"
+HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
+    "726f2e70726f647563742e6d6f64656c00" "726f2e626f6f742e656d2e6d6f64656c00"
 
 # Fix object capture
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "essi" ]]; then

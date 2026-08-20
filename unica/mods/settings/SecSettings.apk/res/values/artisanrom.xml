@@ -8,43 +8,43 @@ BenlyROM supports devices using the Exynos 990 SoC
 
 &#160;</string>
 
-    <string name="maintainer_16_name">Binh24</string>
-    <string name="maintainer_16_role">Lead Developer</string>
-    <string name="maintainer_16_github">binh24</string>
-    <string name="maintainer_16_avatar">binh24_avatar</string>
+    <string name="maintainer_1_name">Binh24</string>
+    <string name="maintainer_1_role">Lead Developer</string>
+    <string name="maintainer_1_github">binh24</string>
+    <string name="maintainer_1_avatar">binh24_avatar</string>
+    
+    <string name="maintainer_2_name">ExtremeXT</string>
+    <string name="maintainer_2_role">EROM DAD</string>
+    <string name="maintainer_2_github">ExtremeXT</string>
+    <string name="maintainer_2_avatar">extremext_avatar</string>
+	
+    <string name="maintainer_3_name">Android Artisan</string>
+    <string name="maintainer_3_role">Artisan Developer</string>
+    <string name="maintainer_3_github">Android-Artisan</string>
+    <string name="maintainer_3_avatar">artisan_avatar</string>
+    
+    <string name="maintainer_4_name">GhasemzadehFard-dev</string>
+    <string name="maintainer_4_role">r8s Developer</string>
+    <string name="maintainer_4_github">GhasemzadehFard-dev</string>
+    <string name="maintainer_4_avatar">mohammad_avatar</string>
+    
+    <string name="maintainer_5_name">Vinsies</string>
+    <string name="maintainer_5_role">Lead Graphic Designer / Tester</string>
+    <string name="maintainer_5_github">irvinhaha</string>
+    <string name="maintainer_5_avatar">irvin_avatar</string>
+    
+    <string name="maintainer_6_name">Miguel Barreto</string>
+    <string name="maintainer_6_role">Tester / Recognised Troll / KRNL Dev</string>
+    <string name="maintainer_6_github">miguelbarretoo</string>
+    <string name="maintainer_6_avatar">miguel_avatar</string>
 
-    <string name="maintainer_1_name">Android Artisan</string>
-    <string name="maintainer_1_role">Artisan Developer</string>
-    <string name="maintainer_1_github">Android-Artisan</string>
-    <string name="maintainer_1_avatar">artisan_avatar</string>
-    
-    <string name="maintainer_2_name">GhasemzadehFard-dev</string>
-    <string name="maintainer_2_role">r8s Developer</string>
-    <string name="maintainer_2_github">GhasemzadehFard-dev</string>
-    <string name="maintainer_2_avatar">mohammad_avatar</string>
-    
-    <string name="maintainer_3_name">Vinsies</string>
-    <string name="maintainer_3_role">Lead Graphic Designer / Tester</string>
-    <string name="maintainer_3_github">irvinhaha</string>
-    <string name="maintainer_3_avatar">irvin_avatar</string>
-    
-    <string name="maintainer_4_name">ExtremeXT</string>
-    <string name="maintainer_4_role">EROM DAD</string>
-    <string name="maintainer_4_github">ExtremeXT</string>
-    <string name="maintainer_4_avatar">extremext_avatar</string>
-    
-    <string name="maintainer_10_name">Miguel Barreto</string>
-    <string name="maintainer_10_role">Tester / Recognised Troll / KRNL Dev</string>
-    <string name="maintainer_10_github">miguelbarretoo</string>
-    <string name="maintainer_10_avatar">miguel_avatar</string>
+    <string name="maintainer_7_name">mrd83</string>
+    <string name="maintainer_7_role">Developer</string>
+    <string name="maintainer_7_github">mrd83</string>
+    <string name="maintainer_7_avatar">mrd83_avatar</string>
 
-    <string name="maintainer_14_name">mrd83</string>
-    <string name="maintainer_14_role">Developer</string>
-    <string name="maintainer_14_github">mrd83</string>
-    <string name="maintainer_14_avatar">mrd83_avatar</string>
-
-    <string name="maintainer_15_name">Milena</string>
-    <string name="maintainer_15_role">Developer</string>
-    <string name="maintainer_15_github"></string>
-    <string name="maintainer_15_avatar">fishe_avatar</string>
+    <string name="maintainer_8_name">Milena</string>
+    <string name="maintainer_8_role">Developer</string>
+    <string name="maintainer_8_github"></string>
+    <string name="maintainer_8_avatar">fishe_avatar</string>
 </resources>

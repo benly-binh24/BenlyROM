@@ -51,7 +51,7 @@
     <string name="unica_pif_update_title">Update Play Integrity Fix</string>
     <string name="unica_rom_version_title">ROM version</string>
     <string name="unica_secure_ss_title">Allow secure screenshot</string>
-    <string name="unica_settings_title">UN1CA Settings</string>
+    <string name="unica_settings_title">ROM Settings</string>
     <string name="unica_ss_detection_title">Disable screen capture detection</string>
     <string name="unica_spoof_settings_title">Spoof settings</string>
     <string name="unica_ui_settings_title">UI settings</string>
@@ -61,7 +61,7 @@
     <string name="unica_oneui85_summary">Display OneUI 8.5 design across settings - Experimental, may cause issues</string>
     <string name="unica_oneui85_system_title">Enable OneUI 8.5 style</string>
     <string name="unica_oneui85_system_summary">Display OneUI 8.5 design across system - Experimental, may cause issues</string>
-    <string name="unica_updates_title">ArtisanROM Updates</string>
+    <string name="unica_updates_title">ROM Updates</string>
     <string name="unica_about_artisanrom_title">About ROM</string>
     <string name="keywords_about_artisanrom">About ROM</string>
     <string name="artisanrom_about_title">About the ROM</string>

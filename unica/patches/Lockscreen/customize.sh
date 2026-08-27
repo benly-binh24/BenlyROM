@@ -63,25 +63,34 @@ fi
 echo "[+] Target LCD Density to enforce: $VENDOR_DENSITY"
 
 # ------------------------------------------------------------------------------
-# 3. Ép LCD Density vào toàn bộ các file prop
+# 3. Chỉ ghi LCD Density vào file build.prop system
 # ------------------------------------------------------------------------------
 PROCESSED_COUNT=0
 
 while IFS= read -r -d '' PROP_FILE; do
     if [ -f "$PROP_FILE" ]; then
-        echo "[+] Processing: $PROP_FILE"
+        echo "[+] Processing System Prop: $PROP_FILE"
 
-        # Xóa các dòng cũ nếu có để tránh trùng lặp
+# Xóa các dòng cũ nếu có để tránh trùng lặp
         sed -i '/^ro\.sf\.lcd_density=/d' "$PROP_FILE"
         sed -i '/^ro\.sf\.init\.lcd_density=/d' "$PROP_FILE"
+        sed -i '/^vendor\.display\.lcd_density=/d' "$PROP_FILE"
+        sed -i '/^persist\.sys\.display\.density=/d' "$PROP_FILE"
         
-        # Ghi đè giá trị mật độ điểm ảnh mới vào file
+        # Ghi đè các giá trị mật độ điểm ảnh mới vào file
         echo "ro.sf.lcd_density=$VENDOR_DENSITY" >> "$PROP_FILE"
         echo "ro.sf.init.lcd_density=$VENDOR_DENSITY" >> "$PROP_FILE"
+        echo "vendor.display.lcd_density=$VENDOR_DENSITY" >> "$PROP_FILE"
+        echo "persist.sys.display.density=$VENDOR_DENSITY" >> "$PROP_FILE"
 
         PROCESSED_COUNT=$((PROCESSED_COUNT + 1))
     fi
-done < <(find "$WORK_SCOPE" -type f \( -name "build.prop" -o -name "system.prop" -o -name "product.prop" -o -name "vendor.prop" -o -name "odm.prop" \) -print0 2>/dev/null)
+done < <(find "$WORK_SCOPE" -type f -name "build.prop" -path "*/system/*" -print0 2>/dev/null)
 
-echo "[+] Successfully enforced density ($VENDOR_DENSITY) across $PROCESSED_COUNT file(s)."
+if [ $PROCESSED_COUNT -eq 0 ]; then
+    echo "[!] Warning: Could not find build.prop inside system partition!"
+else
+    echo "[+] Successfully enforced density ($VENDOR_DENSITY) across $PROCESSED_COUNT file(s)."
+fi
+
 echo "[+] DPI FIX Completed Successfully!"

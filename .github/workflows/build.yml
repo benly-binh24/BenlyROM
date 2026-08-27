@@ -93,12 +93,10 @@ jobs:
           source ./buildenv.sh ${{ matrix.target }}
           ./scripts/extract_fw.sh
 
-      - name: Add swapspace
-        uses: thejerrybao/setup-swap-space@v1
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
         with:
-          swap-space-path: /swapfile
           swap-size-gb: 12
-          remove-existing-swap-files: true
 
       - name: Build ROM
         run: |

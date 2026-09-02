@@ -1,3 +1,6 @@
+# shellcheck disable=SC2034
+SKIPUNZIP=1
+
 # [
 BACKPORT_SF_PROPS()
 {
@@ -230,6 +233,28 @@ else
     DELETE_FROM_WORK_DIR "system" "system/lib64/libparam_A55_250328.so"
 fi
 
+# Support camera light sensor
+TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
+if [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/priv-app/CameraLightSensor/CameraLightSensor.apk" ]; then
+    PATCHED=true
+    ADD_TO_WORK_DIR "$MODPATH" "system" \
+        "system/etc/permissions/privapp-permissions-com.samsung.adaptivebrightnessgo.cameralightsensor.xml" 0 0 644 "u:object_r:system_file:s0"
+    if [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/etc/ev_lux_map_config.xml" ]; then
+        ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" \
+            "system/etc/ev_lux_map_config.xml" 0 0 644 "u:object_r:system_file:s0"
+    elif [ ! -f "$FW_DIR/$TARGET_FIRMWARE_PATH/vendor/etc/ev_lux_map_config.xml" ]; then
+        DECODE_APK "system" "system/framework/motionrecognitionservice.jar"
+        LOG "- Replacing Build.MODEL with \"$(GET_PROP "vendor" "ro.product.vendor.model")\" in /system/system/framework/motionrecognitionservice.jar/smali/com/samsung/android/gesture/ExposureToLuxMapping.smali"
+        SMALI_PATCH "system" "system/framework/motionrecognitionservice.jar" \
+            "smali/com/samsung/android/gesture/ExposureToLuxMapping.smali" "replaceall" \
+            "sget-object v0, Landroid/os/Build;->MODEL:Ljava/lang/String;" \
+            "const-string v0, \\\"$(GET_PROP "vendor" "ro.product.vendor.model")\\\"" \
+            > /dev/null
+    fi
+    ADD_TO_WORK_DIR "$MODPATH" "system" \
+        "system/priv-app/CameraLightSensor/CameraLightSensor.apk" 0 0 644 "u:object_r:system_file:s0"
+fi
+
 # Ensure KSMBD support in kernel
 # - 4.19.x and below: unsupported
 # - 5.4.x-5.10.x: backport (https://github.com/namjaejeon/ksmbd.git)
@@ -267,6 +292,101 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
     fi
 fi
 
+# Ensure IQtiComposer support (pre-API 36)
+# - Disable "ro.product.first_api_level" < 34 check
+if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
+    if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] && \
+            ! grep -q -r "IQtiComposer" "$WORK_DIR/vendor/etc/vintf"; then
+        PATCHED=true
+        # [b.lt #0x729be8] -> [nop]
+        HEX_PATCH "$WORK_DIR/system/system/bin/surfaceflinger" "9f8a00712b03005400068052" "9f8a00711f2003d500068052"
+    fi
+fi
+
+# Support schedtune cgroup controller (pre-API 36)
+# - Check for TARGET_PLATFORM_SDK_VERSION < 36 as 4.19 kernel support has been deprecated in Android B
+if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
+    EXTRACT_KERNEL_IMAGE
+    KERNEL_VERSION="$(grep -a -o -m 1 "Linux version [0-9]*\.[0-9]*" "$TMP_DIR/out/kernel" | awk '{print $3}')"
+    LEGACY_KERNEL=false
+    if [ "$KERNEL_VERSION" ]; then
+        if [ "${KERNEL_VERSION%%.*}" -lt "4" ] || \
+                { [[ "${KERNEL_VERSION%%.*}" == "4" ]] && [ "${KERNEL_VERSION#*.}" -le "19" ]; }; then
+            LEGACY_KERNEL=true
+        fi
+    fi
+
+    if $LEGACY_KERNEL; then
+        PATCHED=true
+
+        if ! grep -q "# Create energy-aware scheduler tuning nodes" "$WORK_DIR/system/system/etc/init/hw/init.rc"; then
+            LOG "- Adding stune cgroup nodes to /system/system/etc/init/hw/init.rc"
+            EVAL "sed -i \"/mkdir \/dev\/socket\/ot-daemon 0770 thread_network thread_network/a\\\\
+\\\\
+    # Create energy-aware scheduler tuning nodes\\\\
+    mkdir /dev/stune/foreground\\\\
+    mkdir /dev/stune/background\\\\
+    mkdir /dev/stune/top-app\\\\
+    mkdir /dev/stune/rt\\\\
+    chown system system /dev/stune\\\\
+    chown system system /dev/stune/foreground\\\\
+    chown system system /dev/stune/background\\\\
+    chown system system /dev/stune/top-app\\\\
+    chown system system /dev/stune/rt\\\\
+    chown system system /dev/stune/tasks\\\\
+    chown system system /dev/stune/foreground/tasks\\\\
+    chown system system /dev/stune/background/tasks\\\\
+    chown system system /dev/stune/top-app/tasks\\\\
+    chown system system /dev/stune/rt/tasks\\\\
+    chown system system /dev/stune/cgroup.procs\\\\
+    chown system system /dev/stune/foreground/cgroup.procs\\\\
+    chown system system /dev/stune/background/cgroup.procs\\\\
+    chown system system /dev/stune/top-app/cgroup.procs\\\\
+    chown system system /dev/stune/rt/cgroup.procs\\\\
+    chmod 0664 /dev/stune/tasks\\\\
+    chmod 0664 /dev/stune/foreground/tasks\\\\
+    chmod 0664 /dev/stune/background/tasks\\\\
+    chmod 0664 /dev/stune/top-app/tasks\\\\
+    chmod 0664 /dev/stune/rt/tasks\\\\
+    chmod 0664 /dev/stune/cgroup.procs\\\\
+    chmod 0664 /dev/stune/foreground/cgroup.procs\\\\
+    chmod 0664 /dev/stune/background/cgroup.procs\\\\
+    chmod 0664 /dev/stune/top-app/cgroup.procs\\\\
+    chmod 0664 /dev/stune/rt/cgroup.procs\" \"$WORK_DIR/system/system/etc/init/hw/init.rc\""
+        fi
+
+        if ! grep -q "/dev/stune/nnapi-hal" "$WORK_DIR/system/system/etc/init/hw/init.rc"; then
+            LOG "- Adding nnapi-hal stune group to /system/system/etc/init/hw/init.rc"
+            EVAL "sed -i \"/chmod 0664 \/dev\/stune\/camera-daemon\/cgroup.procs/a\\\\
+\\\\
+    # Create an stune group for NNAPI HAL processes\\\\
+    mkdir /dev/stune/nnapi-hal\\\\
+    chown system system /dev/stune/nnapi-hal\\\\
+    chown system system /dev/stune/nnapi-hal/tasks\\\\
+    chown system system /dev/stune/nnapi-hal/cgroup.procs\\\\
+    chmod 0664 /dev/stune/nnapi-hal/tasks\\\\
+    chmod 0664 /dev/stune/nnapi-hal/cgroup.procs\\\\
+    write /dev/stune/nnapi-hal/schedtune.boost 1\\\\
+    write /dev/stune/nnapi-hal/schedtune.prefer_idle 1\" \"$WORK_DIR/system/system/etc/init/hw/init.rc\""
+        fi
+
+        ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" \
+            "system/etc/task_profiles/cgroups_28.json" 0 0 644 "u:object_r:cgroup_desc_file:s0"
+        ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" \
+            "system/etc/task_profiles/cgroups_29.json" 0 0 644 "u:object_r:cgroup_desc_file:s0"
+        ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" \
+            "system/etc/task_profiles/cgroups_30.json" 0 0 644 "u:object_r:cgroup_desc_file:s0"
+        ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" \
+            "system/etc/task_profiles/task_profiles_28.json" 0 0 644 "u:object_r:task_profiles_file:s0"
+        ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" \
+            "system/etc/task_profiles/task_profiles_29.json" 0 0 644 "u:object_r:task_profiles_file:s0"
+        ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" \
+            "system/etc/task_profiles/task_profiles_30.json" 0 0 644 "u:object_r:task_profiles_file:s0"
+    fi
+
+    unset KERNEL_VERSION LEGACY_KERNEL
+fi
+
 # Ensure sbauth support in target firmware
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 if [ -f "$WORK_DIR/system/system/bin/sbauth" ] && \
@@ -283,6 +403,42 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
         SMALI_PATCH "system" "system/framework/services.jar" \
             "smali/com/android/server/StorageManagerService.smali" "return" \
             'isPassSupport()Z' 'false'
+    fi
+fi
+
+# Support OMX hardware video codecs (pre-API 35)
+# https://android.googlesource.com/platform/frameworks/av/+/android-16.0.0_r2/media/libstagefright/omx/OMXNodeInstance.cpp#1687
+if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
+    if ! find "$WORK_DIR/vendor/etc" -maxdepth 1 -type f -name "media_codecs*.xml" ! -name "*performance*" -exec cat {} + | \
+            grep -q -P -z '<MediaCodec\s[^>]*name="c2\.(?!android\.|sec\.)[^"]*"(?:(?!</?MediaCodec[\s>])[\s\S])*?="video/'; then
+        PATCHED=true
+        SMALI_PATCH "system" "system/app/MotionPhoto/MotionPhoto.apk" \
+            "smali/com/samsung/android/motionphoto/utils/v2/video/VideoTranscoder.smali" "replace" \
+            'configVideoEncoderParameters(Landroid/media/MediaFormat;Lcom/samsung/android/motionphoto/utils/v2/video/VideoTranscodingTask;)V' \
+            'const p2, 0x7f420888' \
+            'const p2, 0x7f000789'
+        SMALI_PATCH "system" "system/app/MotionPhoto/MotionPhoto.apk" \
+            "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
+            'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
+            'const v4, 0x7f420888' \
+            'const v4, 0x7f000789'
+        if [ -f "$WORK_DIR/system/system/priv-app/GlobalPostProcMgr/GlobalPostProcMgr.apk" ]; then
+            SMALI_PATCH "system" "system/priv-app/GlobalPostProcMgr/GlobalPostProcMgr.apk" \
+                "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
+                'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
+                'const v3, 0x7f420888' \
+                'const v3, 0x7f000789'
+        fi
+        SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+            "smali_classes3/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
+            'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
+            'const v4, 0x7f420888' \
+            'const v4, 0x7f000789'
+        SMALI_PATCH "system" "system/priv-app/vexfwk_service/vexfwk_service.apk" \
+            "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
+            'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
+            'const v3, 0x7f420888' \
+            'const v3, 0x7f000789'
     fi
 fi
 
@@ -393,9 +549,6 @@ if ! grep -q "\"version\": \"4\." "$WORK_DIR/vendor/etc/midas/midas_config.json"
             "etc/midas/midas_config.json" 0 0 644 "u:object_r:vendor_configs_file:s0"
     fi
 fi
-
-LOG "- Fixing MIDAS model detection"
-EVAL "sed -i \"s/$TARGET_CODENAME/$SOURCE_CODENAME/g\" \"$WORK_DIR/vendor/etc/midas/midas_config.json\""
 
 # Upgrade Single Take models (pre-API 35)
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then

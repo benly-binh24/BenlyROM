@@ -1,4 +1,11 @@
-SET_PROP "system" "ro.unica.codename" "$ROM_CODENAME"
+if [ ! "$(GET_PROP "system" "ro.unica.codename")" ]; then
+    LOG "- Patching /system/system/etc/selinux/plat_property_contexts"
+    EVAL "echo \"ro.unica.codename u:object_r:build_prop:s0 exact string\" >> \"$WORK_DIR/system/system/etc/selinux/plat_property_contexts\""
+    # Match latest Samsung's flagship device codename
+    ROM_CODENAME="$(basename "$MODPATH")"
+    SET_PROP "system" "ro.unica.codename" "${ROM_CODENAME^}"
+    unset ROM_CODENAME
+fi
 
 # 2025 Audio Pack
 LOG_STEP_IN "- Adding 2025 Audio Pack"
@@ -56,13 +63,8 @@ if $TARGET_COMMON_SUPPORT_DYN_RESOLUTION_CONTROL; then
             "$MODPATH/ead_resolution_legacy/SecSettings.apk/0001-Add-Adaptive-color-tone-feature.patch"
     fi
 else
-    if [[ "$TARGET_COMMON_SUPPORT_DYN_RESOLUTION_CONTROL" == "false" ]]; then
-        APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-            "$MODPATH/ead/SecSettings.apk/0001-Add-Adaptive-color-tone-feature-non-DR.patch"
-    else
-        APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-            "$MODPATH/ead/SecSettings.apk/0001-Add-Adaptive-color-tone-feature.patch"
-    fi
+    APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+        "$MODPATH/ead/SecSettings.apk/0001-Add-Adaptive-color-tone-feature.patch"
 fi
 APPLY_PATCH "system" "system/priv-app/SettingsProvider/SettingsProvider.apk" \
     "$MODPATH/ead/SettingsProvider.apk/0001-Add-Adaptive-color-tone-feature.patch"
@@ -170,11 +172,6 @@ LOG_STEP_OUT
 LOG "- Downloading latest Game Booster app"
 DOWNLOAD_FILE "$(GET_GALAXY_STORE_DOWNLOAD_URL "com.samsung.android.game.gametools")" \
     "$WORK_DIR/system/system/priv-app/GameTools_Dream/GameTools_Dream.apk"
-
-# Apps crashing due to debloat
-LOG_STEP_IN "- Fixing app crashes"
-ADD_TO_WORK_DIR "$SRC_DIR/prebuilts/extras" "system" "system/etc/permissions"
-LOG_STEP_OUT
 
 # Pet Detector in Galaxy AI
 LOG_STEP_IN "- Adding Pet Detector support in Galaxy AI features"

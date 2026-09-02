@@ -406,11 +406,6 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
             'configVideoEncoderParameters(Landroid/media/MediaFormat;Lcom/samsung/android/motionphoto/utils/v2/video/VideoTranscodingTask;)V' \
             'const p2, 0x7f420888' \
             'const p2, 0x7f000789'
-        SMALI_PATCH "system" "system/app/MotionPhoto/MotionPhoto.apk" \
-            "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
-            'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
-            'const v4, 0x7f420888' \
-            'const v4, 0x7f000789'
         if [ -f "$WORK_DIR/system/system/priv-app/GlobalPostProcMgr/GlobalPostProcMgr.apk" ]; then
             SMALI_PATCH "system" "system/priv-app/GlobalPostProcMgr/GlobalPostProcMgr.apk" \
                 "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \

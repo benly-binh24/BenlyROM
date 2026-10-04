@@ -122,6 +122,7 @@ BACKPORT_SF_PROPS
 # Pre-API 34
 # - Revert commit b0551be: "Camera: Remove GPS_LOCATION if set is called with null"
 #   (https://android.googlesource.com/platform/frameworks/base/+/b0551beb8dab6e399179fcc6525407237fc8ee56%5E%21/#F0)
+# - Support legacy Scene detection camera feature
 #
 # Pre-API 35
 # - Add back SECOND_PICTURE_CONFIG camera feature support
@@ -129,6 +130,13 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "34" ]; then
     PATCHED=true
     APPLY_PATCH "system" "system/framework/framework.jar" \
         "$MODPATH/camera/framework.jar/0001-Backport-legacy-CameraMetadataNative-code.patch"
+    if $TARGET_CAMERA_SUPPORT_MASS_APP_FLAVOR; then
+        APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+            "$MODPATH/camera_mass/SamsungCamera.apk/0001-Backport-legacy-Scene-detection-code.patch"
+    else
+        APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+            "$MODPATH/camera/SamsungCamera.apk/0001-Backport-legacy-Scene-detection-code.patch"
+    fi
 fi
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
     PATCHED=true
@@ -377,6 +385,29 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
     chmod 0664 /dev/stune/rt/cgroup.procs\" \"$WORK_DIR/system/system/etc/init/hw/init.rc\""
         fi
 
+        if ! grep -q "/dev/stune/audio-app" "$WORK_DIR/system/system/etc/init/hw/init.rc"; then
+            LOG "- Adding audio-app stune group to /system/system/etc/init/hw/init.rc"
+            EVAL "sed -i \"/chmod 0664 \/dev\/stune\/rt\/cgroup.procs/a\\\\
+\\\\
+    mkdir /dev/stune/audio-app\\\\
+    chown system system /dev/stune/audio-app\\\\
+    chown system system /dev/stune/audio-app/tasks\\\\
+    chmod 0664 /dev/stune/audio-app/tasks\" \"$WORK_DIR/system/system/etc/init/hw/init.rc\""
+        fi
+
+        if ! grep -q "/dev/stune/camera-daemon" "$WORK_DIR/system/system/etc/init/hw/init.rc"; then
+            LOG "- Adding camera-daemon stune group to /system/system/etc/init/hw/init.rc"
+            EVAL "sed -i \"/chmod 0664 \/dev\/cpuctl\/camera-daemon\/cpu.shares/a\\\\
+\\\\
+    # Create an stune group for camera-specific processes\\\\
+    mkdir /dev/stune/camera-daemon\\\\
+    chown system system /dev/stune/camera-daemon\\\\
+    chown system system /dev/stune/camera-daemon/tasks\\\\
+    chown system system /dev/stune/camera-daemon/cgroup.procs\\\\
+    chmod 0664 /dev/stune/camera-daemon/tasks\\\\
+    chmod 0664 /dev/stune/camera-daemon/cgroup.procs\" \"$WORK_DIR/system/system/etc/init/hw/init.rc\""
+        fi
+
         if ! grep -q "/dev/stune/nnapi-hal" "$WORK_DIR/system/system/etc/init/hw/init.rc"; then
             LOG "- Adding nnapi-hal stune group to /system/system/etc/init/hw/init.rc"
             EVAL "sed -i \"/chmod 0664 \/dev\/stune\/camera-daemon\/cgroup.procs/a\\\\
@@ -441,6 +472,11 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
             'configVideoEncoderParameters(Landroid/media/MediaFormat;Lcom/samsung/android/motionphoto/utils/v2/video/VideoTranscodingTask;)V' \
             'const p2, 0x7f420888' \
             'const p2, 0x7f000789'
+        SMALI_PATCH "system" "system/app/MotionPhoto/MotionPhoto.apk" \
+            "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
+            'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
+            'const v4, 0x7f420888' \
+            'const v4, 0x7f000789'
         if xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -q "ceec002848d1724c0620"; then
             HEX_PATCH "$WORK_DIR/system/system/lib/libstagefright.so" \
                 "ceec002848d1724c0620" "ceec002848e0724c0620"
@@ -477,6 +513,39 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
             'const v3, 0x7f420888' \
             'const v3, 0x7f000789'
     fi
+fi
+
+# Ensure EU eco recharge support (pre-API 34)
+# - Check for 'batt_soc_rechg' to determine if newer battery drivers are in place
+if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "34" ]; then
+    VBOOT_MISSING=true
+    KERNEL_MISSING=true
+
+    if [ -f "$WORK_DIR/kernel/vendor_boot.img" ]; then
+        # Check for GKI devices
+        EXTRACT_KERNEL_MODULES
+        if grep -q "batt_soc_rechg" "$TMP_DIR/out/vendor_ramdisk"*; then
+            VBOOT_MISSING=false
+        fi
+    fi
+
+    # Check for legacy devices
+    EXTRACT_KERNEL_IMAGE
+    if grep -q "batt_soc_rechg" "$TMP_DIR/out/kernel"; then
+        KERNEL_MISSING=false
+    fi
+
+    if $VBOOT_MISSING && $KERNEL_MISSING; then
+        PATCHED=true
+        SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_BATTERY_DISABLE_ECO_BATTERY" "TRUE"
+        SMALI_PATCH "system" "system/framework/services.jar" \
+            "smali/com/android/server/battery/BattFeatures.smali" "replace" \
+            "<clinit>()V" \
+            "SEC_FLOATING_FEATURE_BATTERY_DISABLE_ECO_BATTERY_FEATURE" \
+            "SEC_FLOATING_FEATURE_BATTERY_DISABLE_ECO_BATTERY"
+    fi
+
+    unset VBOOT_MISSING KERNEL_MISSING
 fi
 
 # Support legacy usb_notify kernel drivers (pre-API 36)

@@ -1,6 +1,3 @@
-# shellcheck disable=SC2034
-SKIPUNZIP=1
-
 # [
 BACKPORT_SF_PROPS()
 {
@@ -119,36 +116,6 @@ PATCHED=false
 # - Add ro.surface_flinger.game_default_frame_rate_override if missing
 BACKPORT_SF_PROPS
 
-# Pre-API 34
-# - Revert commit b0551be: "Camera: Remove GPS_LOCATION if set is called with null"
-#   (https://android.googlesource.com/platform/frameworks/base/+/b0551beb8dab6e399179fcc6525407237fc8ee56%5E%21/#F0)
-# - Support legacy Scene detection camera feature
-#
-# Pre-API 35
-# - Add back SECOND_PICTURE_CONFIG camera feature support
-if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "34" ]; then
-    PATCHED=true
-    APPLY_PATCH "system" "system/framework/framework.jar" \
-        "$MODPATH/camera/framework.jar/0001-Backport-legacy-CameraMetadataNative-code.patch"
-    if $TARGET_CAMERA_SUPPORT_MASS_APP_FLAVOR; then
-        APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
-            "$MODPATH/camera_mass/SamsungCamera.apk/0001-Backport-legacy-Scene-detection-code.patch"
-    else
-        APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
-            "$MODPATH/camera/SamsungCamera.apk/0001-Backport-legacy-Scene-detection-code.patch"
-    fi
-fi
-if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
-    PATCHED=true
-    if $TARGET_CAMERA_SUPPORT_MASS_APP_FLAVOR; then
-        APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
-            "$MODPATH/camera_mass/SamsungCamera.apk/0001-Backport-CONTROL_AVAILABLE_FEATURE_SECOND_PICTURE_CO.patch"
-    else
-        APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
-            "$MODPATH/camera/SamsungCamera.apk/0001-Backport-CONTROL_AVAILABLE_FEATURE_SECOND_PICTURE_CO.patch"
-    fi
-fi
-
 # Support legacy Face HAL (pre-API 34)
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "34" ]; then
     if [ ! -f "$WORK_DIR/vendor/bin/hw/vendor.samsung.hardware.biometrics.face@3.0-service" ]; then
@@ -263,28 +230,6 @@ else
     DELETE_FROM_WORK_DIR "system" "system/lib64/libparam_A55_250328.so"
 fi
 
-# Support camera light sensor
-TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
-if [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/priv-app/CameraLightSensor/CameraLightSensor.apk" ]; then
-    PATCHED=true
-    ADD_TO_WORK_DIR "$MODPATH" "system" \
-        "system/etc/permissions/privapp-permissions-com.samsung.adaptivebrightnessgo.cameralightsensor.xml" 0 0 644 "u:object_r:system_file:s0"
-    if [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/etc/ev_lux_map_config.xml" ]; then
-        ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" \
-            "system/etc/ev_lux_map_config.xml" 0 0 644 "u:object_r:system_file:s0"
-    elif [ ! -f "$FW_DIR/$TARGET_FIRMWARE_PATH/vendor/etc/ev_lux_map_config.xml" ]; then
-        DECODE_APK "system" "system/framework/motionrecognitionservice.jar"
-        LOG "- Replacing Build.MODEL with \"$(GET_PROP "vendor" "ro.product.vendor.model")\" in /system/system/framework/motionrecognitionservice.jar/smali/com/samsung/android/gesture/ExposureToLuxMapping.smali"
-        SMALI_PATCH "system" "system/framework/motionrecognitionservice.jar" \
-            "smali/com/samsung/android/gesture/ExposureToLuxMapping.smali" "replaceall" \
-            "sget-object v0, Landroid/os/Build;->MODEL:Ljava/lang/String;" \
-            "const-string v0, \\\"$(GET_PROP "vendor" "ro.product.vendor.model")\\\"" \
-            > /dev/null
-    fi
-    ADD_TO_WORK_DIR "$MODPATH" "system" \
-        "system/priv-app/CameraLightSensor/CameraLightSensor.apk" 0 0 644 "u:object_r:system_file:s0"
-fi
-
 # Ensure KSMBD support in kernel
 # - 4.19.x and below: unsupported
 # - 5.4.x-5.10.x: backport (https://github.com/namjaejeon/ksmbd.git)
@@ -319,17 +264,6 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
         HEX_PATCH "$WORK_DIR/system/system/bin/netd" "1f01096be0010054" "1f01096b1f2003d5"
         # - android::net::MobileBBController::isMBBPathsPresent()
         HEX_PATCH "$WORK_DIR/system/system/bin/netd" "1f01096b20010054" "1f01096b1f2003d5"
-    fi
-fi
-
-# Ensure IQtiComposer support (pre-API 36)
-# - Disable "ro.product.first_api_level" < 34 check
-if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
-    if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] && \
-            ! grep -q -r "IQtiComposer" "$WORK_DIR/vendor/etc/vintf"; then
-        PATCHED=true
-        # [b.lt #0x729be8] -> [nop]
-        HEX_PATCH "$WORK_DIR/system/system/bin/surfaceflinger" "9f8a00712b03005400068052" "9f8a00711f2003d500068052"
     fi
 fi
 
@@ -385,29 +319,6 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
     chmod 0664 /dev/stune/rt/cgroup.procs\" \"$WORK_DIR/system/system/etc/init/hw/init.rc\""
         fi
 
-        if ! grep -q "/dev/stune/audio-app" "$WORK_DIR/system/system/etc/init/hw/init.rc"; then
-            LOG "- Adding audio-app stune group to /system/system/etc/init/hw/init.rc"
-            EVAL "sed -i \"/chmod 0664 \/dev\/stune\/rt\/cgroup.procs/a\\\\
-\\\\
-    mkdir /dev/stune/audio-app\\\\
-    chown system system /dev/stune/audio-app\\\\
-    chown system system /dev/stune/audio-app/tasks\\\\
-    chmod 0664 /dev/stune/audio-app/tasks\" \"$WORK_DIR/system/system/etc/init/hw/init.rc\""
-        fi
-
-        if ! grep -q "/dev/stune/camera-daemon" "$WORK_DIR/system/system/etc/init/hw/init.rc"; then
-            LOG "- Adding camera-daemon stune group to /system/system/etc/init/hw/init.rc"
-            EVAL "sed -i \"/chmod 0664 \/dev\/cpuctl\/camera-daemon\/cpu.shares/a\\\\
-\\\\
-    # Create an stune group for camera-specific processes\\\\
-    mkdir /dev/stune/camera-daemon\\\\
-    chown system system /dev/stune/camera-daemon\\\\
-    chown system system /dev/stune/camera-daemon/tasks\\\\
-    chown system system /dev/stune/camera-daemon/cgroup.procs\\\\
-    chmod 0664 /dev/stune/camera-daemon/tasks\\\\
-    chmod 0664 /dev/stune/camera-daemon/cgroup.procs\" \"$WORK_DIR/system/system/etc/init/hw/init.rc\""
-        fi
-
         if ! grep -q "/dev/stune/nnapi-hal" "$WORK_DIR/system/system/etc/init/hw/init.rc"; then
             LOG "- Adding nnapi-hal stune group to /system/system/etc/init/hw/init.rc"
             EVAL "sed -i \"/chmod 0664 \/dev\/stune\/camera-daemon\/cgroup.procs/a\\\\
@@ -457,95 +368,6 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
             "smali/com/android/server/StorageManagerService.smali" "return" \
             'isPassSupport()Z' 'false'
     fi
-fi
-
-# Support OMX hardware video codecs (pre-API 35)
-# - Replace COLOR_FormatYUV420Flexible with COLOR_FormatSurface/OMX_COLOR_FormatAndroidOpaque
-#   (https://android.googlesource.com/platform/frameworks/av/+/android-16.0.0_r2/media/libstagefright/omx/OMXNodeInstance.cpp#1687)
-# - Disable ACodec HEVC limitation for RECORDING_MODE_HDR10_PLUS/RECORDING_MODE_PRO_HDR10_PLUS
-if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
-    if ! find "$WORK_DIR/vendor/etc" -maxdepth 1 -type f -name "media_codecs*.xml" ! -name "*performance*" -exec cat {} + | \
-            grep -q -P -z '<MediaCodec\s[^>]*name="c2\.(?!android\.|sec\.)[^"]*"(?:(?!</?MediaCodec[\s>])[\s\S])*?="video/'; then
-        PATCHED=true
-        SMALI_PATCH "system" "system/app/MotionPhoto/MotionPhoto.apk" \
-            "smali/com/samsung/android/motionphoto/utils/v2/video/VideoTranscoder.smali" "replace" \
-            'configVideoEncoderParameters(Landroid/media/MediaFormat;Lcom/samsung/android/motionphoto/utils/v2/video/VideoTranscodingTask;)V' \
-            'const p2, 0x7f420888' \
-            'const p2, 0x7f000789'
-        SMALI_PATCH "system" "system/app/MotionPhoto/MotionPhoto.apk" \
-            "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
-            'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
-            'const v4, 0x7f420888' \
-            'const v4, 0x7f000789'
-        if xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -q "ceec002848d1724c0620"; then
-            HEX_PATCH "$WORK_DIR/system/system/lib/libstagefright.so" \
-                "ceec002848d1724c0620" "ceec002848e0724c0620"
-        elif xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -q "aaea002879d1264c0620"; then
-            HEX_PATCH "$WORK_DIR/system/system/lib/libstagefright.so" \
-                "aaea002879d1264c0620" "aaea002879e0264c0620"
-        else
-            ABORT "No known patch available for the supplied libstagefright.so"
-        fi
-        if xxd -p -c 0 "$WORK_DIR/system/system/lib64/libstagefright.so" | grep -q "70690594205100347a9a40f9"; then
-            HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
-                "70690594205100347a9a40f9" "706905941f2003d57a9a40f9"
-        elif xxd -p -c 0 "$WORK_DIR/system/system/lib64/libstagefright.so" | grep -q "864d0594604d00347a9a40f9"; then
-            HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
-                "864d0594604d00347a9a40f9" "864d05941f2003d57a9a40f9"
-        else
-            ABORT "No known patch available for the supplied libstagefright.so"
-        fi
-        if [ -f "$WORK_DIR/system/system/priv-app/GlobalPostProcMgr/GlobalPostProcMgr.apk" ]; then
-            SMALI_PATCH "system" "system/priv-app/GlobalPostProcMgr/GlobalPostProcMgr.apk" \
-                "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
-                'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
-                'const v3, 0x7f420888' \
-                'const v3, 0x7f000789'
-        fi
-        SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
-            "smali_classes3/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
-            'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
-            'const v4, 0x7f420888' \
-            'const v4, 0x7f000789'
-        SMALI_PATCH "system" "system/priv-app/vexfwk_service/vexfwk_service.apk" \
-            "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
-            'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
-            'const v3, 0x7f420888' \
-            'const v3, 0x7f000789'
-    fi
-fi
-
-# Ensure EU eco recharge support (pre-API 34)
-# - Check for 'batt_soc_rechg' to determine if newer battery drivers are in place
-if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "34" ]; then
-    VBOOT_MISSING=true
-    KERNEL_MISSING=true
-
-    if [ -f "$WORK_DIR/kernel/vendor_boot.img" ]; then
-        # Check for GKI devices
-        EXTRACT_KERNEL_MODULES
-        if grep -q "batt_soc_rechg" "$TMP_DIR/out/vendor_ramdisk"*; then
-            VBOOT_MISSING=false
-        fi
-    fi
-
-    # Check for legacy devices
-    EXTRACT_KERNEL_IMAGE
-    if grep -q "batt_soc_rechg" "$TMP_DIR/out/kernel"; then
-        KERNEL_MISSING=false
-    fi
-
-    if $VBOOT_MISSING && $KERNEL_MISSING; then
-        PATCHED=true
-        SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_BATTERY_DISABLE_ECO_BATTERY" "TRUE"
-        SMALI_PATCH "system" "system/framework/services.jar" \
-            "smali/com/android/server/battery/BattFeatures.smali" "replace" \
-            "<clinit>()V" \
-            "SEC_FLOATING_FEATURE_BATTERY_DISABLE_ECO_BATTERY_FEATURE" \
-            "SEC_FLOATING_FEATURE_BATTERY_DISABLE_ECO_BATTERY"
-    fi
-
-    unset VBOOT_MISSING KERNEL_MISSING
 fi
 
 # Support legacy usb_notify kernel drivers (pre-API 36)
@@ -655,6 +477,9 @@ if ! grep -q "\"version\": \"4\." "$WORK_DIR/vendor/etc/midas/midas_config.json"
             "etc/midas/midas_config.json" 0 0 644 "u:object_r:vendor_configs_file:s0"
     fi
 fi
+
+LOG "- Fixing MIDAS model detection"
+EVAL "sed -i \"s/$TARGET_CODENAME/$SOURCE_CODENAME/g\" \"$WORK_DIR/vendor/etc/midas/midas_config.json\""
 
 # Upgrade Single Take models (pre-API 35)
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then

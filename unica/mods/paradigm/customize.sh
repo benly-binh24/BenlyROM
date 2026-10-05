@@ -1,14 +1,6 @@
-# shellcheck disable=SC2034
-SKIPUNZIP=1
-
-if [ ! "$(GET_PROP "system" "ro.unica.codename")" ]; then
-    LOG "- Patching /system/system/etc/selinux/plat_property_contexts"
-    EVAL "echo \"ro.unica.codename u:object_r:build_prop:s0 exact string\" >> \"$WORK_DIR/system/system/etc/selinux/plat_property_contexts\""
-    # Match latest Samsung's flagship device codename
-    ROM_CODENAME="$(basename "$MODPATH")"
-    SET_PROP "system" "ro.unica.codename" "${ROM_CODENAME^}"
-    unset ROM_CODENAME
-fi
+LOG "- Patching /system/system/etc/selinux/plat_property_contexts"
+EVAL "echo \"ro.unica.codename u:object_r:build_prop:s0 exact string\" >> \"$WORK_DIR/system/system/etc/selinux/plat_property_contexts\""
+SET_PROP "system" "ro.unica.codename" "$ROM_CODENAME"
 
 # 2025 Audio Pack
 LOG_STEP_IN "- Adding 2025 Audio Pack"
@@ -66,8 +58,13 @@ if $TARGET_COMMON_SUPPORT_DYN_RESOLUTION_CONTROL; then
             "$MODPATH/ead_resolution_legacy/SecSettings.apk/0001-Add-Adaptive-color-tone-feature.patch"
     fi
 else
-    APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-        "$MODPATH/ead/SecSettings.apk/0001-Add-Adaptive-color-tone-feature.patch"
+    if [[ "$TARGET_COMMON_SUPPORT_DYN_RESOLUTION_CONTROL" == "false" ]]; then
+        APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+            "$MODPATH/ead/SecSettings.apk/0001-Add-Adaptive-color-tone-feature-non-DR.patch"
+    else
+        APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+            "$MODPATH/ead/SecSettings.apk/0001-Add-Adaptive-color-tone-feature.patch"
+    fi
 fi
 APPLY_PATCH "system" "system/priv-app/SettingsProvider/SettingsProvider.apk" \
     "$MODPATH/ead/SettingsProvider.apk/0001-Add-Adaptive-color-tone-feature.patch"
@@ -123,8 +120,9 @@ ADD_TO_WORK_DIR "pa2qxxx" "system" \
 ADD_TO_WORK_DIR "pa2qxxx" "system" \
     "system/etc/sysconfig/moments.xml" 0 0 644 "u:object_r:system_file:s0"
 ADD_TO_WORK_DIR "pa2qxxx" "system" "system/priv-app/Moments/Moments.apk" 0 0 644 "u:object_r:system_file:s0"
-ADD_TO_WORK_DIR "$MODPATH" "system" \
-    "system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggestions.apk" 0 0 644 "u:object_r:system_file:s0"
+LOG "- Downloading Smart suggestions app with full-global-release flavor"
+DOWNLOAD_FILE "$(GET_GALAXY_STORE_DOWNLOAD_URL "com.samsung.android.smartsuggestions")" \
+    "$WORK_DIR/system/system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggestions.apk"
 # HACK [
 # Samsung has released an update for the Smart suggestions app in March 2026.
 # The versioning of the "basic-global-release" flavor differs from the "full-global-release" one.
@@ -175,12 +173,17 @@ LOG "- Downloading latest Game Booster app"
 DOWNLOAD_FILE "$(GET_GALAXY_STORE_DOWNLOAD_URL "com.samsung.android.game.gametools")" \
     "$WORK_DIR/system/system/priv-app/GameTools_Dream/GameTools_Dream.apk"
 
+# Apps crashing due to debloat
+LOG_STEP_IN "- Fixing app crashes"
+ADD_TO_WORK_DIR "$SRC_DIR/prebuilts/extras" "system" "system/etc/permissions"
+LOG_STEP_OUT
+
 # Pet Detector in Galaxy AI
 LOG_STEP_IN "- Adding Pet Detector support in Galaxy AI features"
 if [ -d "$WORK_DIR/vendor/etc/petdetector/studio_pd" ]; then
     DELETE_FROM_WORK_DIR "vendor" "etc/petdetector/studio_pd"
 fi
-ADD_TO_WORK_DIR "pa2qxxx" "vendor" "etc/petdetector/studio_pd/config_thresholds.json" 0 0 644 "u:object_r:vendor_configs_file:s0"
-ADD_TO_WORK_DIR "pa2qxxx" "vendor" "etc/petdetector/studio_pd/studio_pd_cnn.info" 0 0 644 "u:object_r:vendor_configs_file:s0"
-ADD_TO_WORK_DIR "pa2qxxx" "vendor" "etc/petdetector/studio_pd/studio_pd_cnn.tflite" 0 0 644 "u:object_r:vendor_configs_file:s0"
+ADD_TO_WORK_DIR "gts11xx" "vendor" "etc/petdetector/studio_pd/config_thresholds.json" 0 0 644 "u:object_r:vendor_configs_file:s0"
+ADD_TO_WORK_DIR "gts11xx" "vendor" "etc/petdetector/studio_pd/studio_pd_cnn.info" 0 0 644 "u:object_r:vendor_configs_file:s0"
+ADD_TO_WORK_DIR "gts11xx" "vendor" "etc/petdetector/studio_pd/studio_pd_cnn.tflite" 0 0 644 "u:object_r:vendor_configs_file:s0"
 LOG_STEP_OUT

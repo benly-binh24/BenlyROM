@@ -94,6 +94,11 @@ else
     HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
         "e10740b9e22340b9e00313aa44aa059420020034fa03002a" \
         "e10740b9e22340b9e00313aa44aa059411000014fa03002a"
+        
+    #Patch the backward-in-time check to fall through and adopt the new session's timestamp.
+    HEX_PATCH "$WORK_DIR/vendor/lib/libstagefright_bufferqueue_helper_vendor.so" \
+        "d7e94601401b71eb060006da" \
+        "d7e94601401b71eb060000bf"     
 fi
 LOG_STEP_OUT
 
@@ -176,8 +181,7 @@ LOG_STEP_IN "- Passing per-frame EV to ArcSoft LLHDR/MFHDR"
 # but the Exynos 990 HAL does not reflect the bracket there, so the p3s ArcSoft libs reject
 # every burst (ARC_LLHDR_Process fail(2)). The bracket offset, in the same 1/256 EV units,
 # is in samsung.android.sensor.multiFrameEv (SemCaptureResult.D1 in SamsungCamera 16.5.02.36).
-# The native LLHDR node passes (ref EV - frame EV) to the library, so it gets the negated
-# offset; the MFHDR node uses the value as is.
+# Both native nodes pass (ref EV - frame EV) to the library, so they get the negated offset.
 SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
     "smali_classes3/com/samsung/android/camera/core2/node/llhdr/arcsoft/ArcLlHdrNodeBase.smali" "replace" \
     'setExtraCaptureInfo(Lcom/samsung/android/camera/core2/local/vendorkey/CaptureMetadata;)V' \
@@ -201,5 +205,11 @@ SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
     'nativeCallSpecificCommand(Lcom/samsung/android/camera/core2/local/vendorkey/CaptureMetadata;Lcom/samsung/android/camera/core2/container/ExtraBundle;)V' \
     'sget-object p2, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->y1:Landroid/hardware/camera2/CaptureResult$Key;' \
     'sget-object p2, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->D1:Landroid/hardware/camera2/CaptureResult$Key;' \
+    > /dev/null
+SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+    "smali_classes3/com/samsung/android/camera/core2/node/mfhdr/arcsoft/v4/ArcMfHdrNode.smali" "replace" \
+    'nativeCallSpecificCommand(Lcom/samsung/android/camera/core2/local/vendorkey/CaptureMetadata;Lcom/samsung/android/camera/core2/container/ExtraBundle;)V' \
+    'const-string p2, "nativeCallSpecificCommand: captureEv = %d"' \
+    $'    invoke-virtual {p1}, Ljava/lang/Integer;->intValue()I\n    move-result p2\n    neg-int p2, p2\n    invoke-static {p2}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;\n    move-result-object p1\n    const-string p2, "nativeCallSpecificCommand: -multiFrameEv = %d"' \
     > /dev/null
 LOG_STEP_OUT

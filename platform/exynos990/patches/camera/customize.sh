@@ -84,8 +84,8 @@ else
     # and relies on that method to resume it, otherwise the recording finishes
     # with zero encoded frames. Start that input active instead.
     HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
-        "810240f97ef9019421f5ffd021481091e00314aa2200805225fd0194" \
-        "810240f97ef9019421f5ffd021481091e00314aa0200805225fd0194"
+        "010140f90a4d0594604d0034" \
+        "010140f90a4d05941f2003d5"
 
     # Android 16 configures temporal SVC for high-frame-rate recordings. The
     # legacy Exynos HEVC OMX encoder does not implement the queried extension

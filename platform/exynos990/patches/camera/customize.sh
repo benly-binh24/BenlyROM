@@ -91,9 +91,9 @@ else
     # legacy Exynos HEVC OMX encoder does not implement the queried extension
     # and returns ERROR_UNSUPPORTED. Keep the encoder setup going without SVC;
     # AVC encoders that support the extension continue through the same path.
-    HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
-        "e10740b9e22340b9e00313aa44aa059420020034fa03002a" \
-        "e10740b9e22340b9e00313aa44aa059411000014fa03002a"
+    # HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
+    #  "e10740b9e22340b9e00313aa44aa059420020034fa03002a" \
+    # "e10740b9e22340b9e00313aa44aa059411000014fa03002a"
         
     #Patch the backward-in-time check to fall through and adopt the new session's timestamp.
     HEX_PATCH "$WORK_DIR/vendor/lib/libstagefright_bufferqueue_helper_vendor.so" \

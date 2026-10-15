@@ -83,9 +83,9 @@ else
     # Super Slow Motion still creates its persistent encoder input suspended
     # and relies on that method to resume it, otherwise the recording finishes
     # with zero encoded frames. Start that input active instead.
-    HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
-        "010140f90a4d0594604d0034" \
-        "010140f90a4d05941f2003d5"
+    # HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
+    #   "010140f90a4d0594604d0034" \
+    #   "010140f90a4d05941f2003d5"
 
     # Android 16 configures temporal SVC for high-frame-rate recordings. The
     # legacy Exynos HEVC OMX encoder does not implement the queried extension

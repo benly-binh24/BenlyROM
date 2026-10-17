@@ -91,9 +91,11 @@ else
     # legacy Exynos HEVC OMX encoder does not implement the queried extension
     # and returns ERROR_UNSUPPORTED. Keep the encoder setup going without SVC;
     # AVC encoders that support the extension continue through the same path.
-    # HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
-    #  "e10740b9e22340b9e00313aa44aa059420020034fa03002a" \
-    # "e10740b9e22340b9e00313aa44aa059411000014fa03002a"
+    # (cbz w0 -> b ngay sau bl ACodec::configureSVC). 3 byte "be4d05" là offset của bl
+    # configureSVC@plt, phụ thuộc bản build libstagefright.so của firmware nguồn.
+    HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
+        "e10740b9e22340b9e00313aabe4d059420020034fa03002a" \
+        "e10740b9e22340b9e00313aabe4d059411000014fa03002a"
         
     #Patch the backward-in-time check to fall through and adopt the new session's timestamp.
     HEX_PATCH "$WORK_DIR/vendor/lib/libstagefright_bufferqueue_helper_vendor.so" \
@@ -142,6 +144,64 @@ done
 # shellcheck disable=SC2046
 wait $(jobs -p) || exit 1
 
+LOG_STEP_OUT
+
+LOG_STEP_IN "- Passing per-frame EV to ArcSoft LLHDR/MFHDR"
+# The ArcSoft LLHDR/MFHDR nodes send samsung.android.sensor.captureEv as the frame EV,
+# but the Exynos 990 HAL does not reflect the bracket there, so the p3s ArcSoft libs reject
+# every burst (ARC_LLHDR_Process fail(2)). The bracket offset, in the same 1/256 EV units,
+# is in samsung.android.sensor.multiFrameEv.
+# Both native nodes pass (ref EV - frame EV) to the library, so they get the negated offset.
+# Obfuscated key names of this SamsungCamera build: captureEv = u1, multiFrameEv = z1.
+
+SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+    "smali_classes3/com/samsung/android/camera/core2/node/llhdr/arcsoft/ArcLlHdrNodeBase.smali" "replace" \
+    'setExtraCaptureInfo(Lcom/samsung/android/camera/core2/local/vendorkey/CaptureMetadata;)V' \
+    'sget-object v2, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->u1:Landroid/hardware/camera2/CaptureResult$Key;' \
+    'sget-object v2, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->z1:Landroid/hardware/camera2/CaptureResult$Key;' \
+    > /dev/null
+SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+    "smali_classes3/com/samsung/android/camera/core2/node/llhdr/arcsoft/ArcLlHdrNodeBase.smali" "replace" \
+    'setExtraCaptureInfo(Lcom/samsung/android/camera/core2/local/vendorkey/CaptureMetadata;)V' \
+    '.locals 3' \
+    '.locals 4' \
+    > /dev/null
+SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+    "smali_classes3/com/samsung/android/camera/core2/node/llhdr/arcsoft/ArcLlHdrNodeBase.smali" "replace" \
+    'setExtraCaptureInfo(Lcom/samsung/android/camera/core2/local/vendorkey/CaptureMetadata;)V' \
+    'filled-new-array {v0, v1, p1}, [Ljava/lang/Object;' \
+    $'invoke-virtual {p1}, Ljava/lang/Integer;->intValue()I\n    move-result v3\n    neg-int v3, v3\n    invoke-static {v3}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;\n    move-result-object v3\n    filled-new-array {v0, v1, v3}, [Ljava/lang/Object;' \
+    > /dev/null
+SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+    "smali_classes3/com/samsung/android/camera/core2/node/mfhdr/arcsoft/v4/ArcMfHdrNode.smali" "replace" \
+    'nativeCallSpecificCommand(Lcom/samsung/android/camera/core2/local/vendorkey/CaptureMetadata;)V' \
+    'sget-object v0, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->u1:Landroid/hardware/camera2/CaptureResult$Key;' \
+    'sget-object v0, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->z1:Landroid/hardware/camera2/CaptureResult$Key;' \
+    > /dev/null
+SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+    "smali_classes3/com/samsung/android/camera/core2/node/mfhdr/arcsoft/v4/ArcMfHdrNode.smali" "replace" \
+    'nativeCallSpecificCommand(Lcom/samsung/android/camera/core2/local/vendorkey/CaptureMetadata;)V' \
+    'const-string/jumbo v0, "processPicture: captureEv = %d"' \
+    $'invoke-virtual {p1}, Ljava/lang/Integer;->intValue()I\n    move-result v0\n    neg-int v0, v0\n    invoke-static {v0}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;\n    move-result-object p1\n    const-string/jumbo v0, "processPicture: -multiFrameEv = %d"' \
+    > /dev/null
+LOG_STEP_OUT
+
+LOG_STEP_IN "- Enabling scene detection for document scan"
+# IntelligentManager.isSceneOptimizerAvailable() feeds enableSceneDetection(). Make it also
+# return true when ADDITIONAL_SCENE_DOCUMENT_SCAN is on. p0 (this) is overwritten there, so
+# keep the CameraSettings object in v2 (free at that point) for the extra check.
+SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+    "smali_classes4/com/sec/android/app/camera/shootingmode/photo/intelligentui/IntelligentManager.smali" "replace" \
+    'isSceneOptimizerAvailable()Z' \
+    'iget-object p0, p0, Lcom/sec/android/app/camera/shootingmode/photo/intelligentui/IntelligentManager;->mCameraSettings:Lcom/sec/android/app/camera/interfaces/CameraSettings;' \
+    $'iget-object v2, p0, Lcom/sec/android/app/camera/shootingmode/photo/intelligentui/IntelligentManager;->mCameraSettings:Lcom/sec/android/app/camera/interfaces/CameraSettings;\n\n    move-object p0, v2' \
+    > /dev/null
+SMALI_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+    "smali_classes4/com/sec/android/app/camera/shootingmode/photo/intelligentui/IntelligentManager.smali" "replace" \
+    'isSceneOptimizerAvailable()Z' \
+    'if-ne p0, v0, :cond_3' \
+    $'if-eq p0, v0, :cond_doc_ok\n\n    sget-object p0, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->ADDITIONAL_SCENE_DOCUMENT_SCAN:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;\n\n    invoke-interface {v2, p0}, Lcom/sec/android/app/camera/interfaces/CameraSettings;->get(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)I\n\n    move-result p0\n\n    if-ne p0, v0, :cond_3\n\n    :cond_doc_ok' \
+    > /dev/null
 LOG_STEP_OUT
 
 LOG_STEP_IN "- Adding S21 (p3sxxx) SWISP models"

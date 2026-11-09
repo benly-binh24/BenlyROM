@@ -2,40 +2,55 @@
   <img loading="lazy" src="readme-res/banner.png"/>
 </h1>
 <p align="center">
-  <a href="https://github.com/ArtisanROM/ArtisanROM/blob/sixteen-qpr2/LICENSE"><img loading="lazy" src="https://img.shields.io/github/license/ArtisanROM/ArtisanROM?style=for-the-badge&logo=github"/></a>
-  <a href="https://github.com/ArtisanROM/ArtisanROM/commits/sixteen-qpr2"><img loading="lazy" src="https://img.shields.io/github/last-commit/ArtisanROM/ArtisanROM/sixteen-qpr2?style=for-the-badge"/></a>
-  <a href="https://github.com/ArtisanROM/ArtisanROM/stargazers"><img loading="lazy" src="https://img.shields.io/github/stars/ArtisanROM/ArtisanROM?style=for-the-badge"/></a>
+  <a href="https://github.com/benly-binh24/BenlyROM/blob/sixteen/LICENSE"><img loading="lazy" src="https://img.shields.io/github/license/ArtisanROM/ArtisanROM?style=for-the-badge&logo=github"/></a>
+  <a href="https://github.com/benly-binh24/BenlyROM/commits/sixteen"><img loading="lazy" src="https://img.shields.io/github/last-commit/ArtisanROM/ArtisanROM/sixteen?style=for-the-badge"/></a>
+  <a href="https://github.com/benly-binh24/BenlyROM/stargazers"><img loading="lazy" src="https://img.shields.io/github/stars/ArtisanROM/ArtisanROM?style=for-the-badge"/></a>
 </p>
-<p align="center">ArtisanROM <i>Aether</i> is a work-in-progress custom firmware for Samsung Galaxy devices.</p>
+<p align="center">Now we have 4 OneUI versions 6 * 7 * 8 * 8.5 Free to experience - Easy to install and use</p>​
+ <p align="center"> BenlyROM is a work-in-progress custom firmware for Samsung Galaxy devices.</p>
 
 <p align="center">
-  <a href="https://github.com/ArtisanROM/ArtisanROM/issues">🚀 issues</a>
+  <a href="https://github.com/benly-binh24/BenlyROM/issues">🚀 issues</a>
   •
-  <a href="https://discord.gg/TxYWApVRaE">💬 Discord</a>
+  <a  href="https://github.com/benly-binh24/BenlyROM/wiki">📖 Wiki</a>
   •
-  <a  href="https://github.com/ArtisanROM/ArtisanROM/wiki">📖 Wiki</a>
+  <a  href="https://github.com/benly-binh24/BenlyROM/releases">*Releases</a>
   •
-  <a href="https://github.com/ArtisanROM/ArtisanROM/blob/sixteen-qpr2/CHANGELOG.md">📝 Changelog</a>
-  •
-  <a href="https://github.com/ArtisanROM/ArtisanROM/blob/sixteen-qpr2/MAINTAINERS">🧑‍💻 Maintainers</a>
+  <a href="https://github.com/benly-binh24/BenlyROM/blob/sixteen/CHANGELOG.md">📝 Changelog</a>
 </p>
 
-# What is ArtisanROM Aether?
-ArtisanROM Aether is a work-in-progress custom firmware for Samsung Galaxy devices.
+# What is BenlyROM?
+BenlyROM is a work-in-progress custom firmware for Samsung Galaxy devices.
 
 It's based on the latest and greatest iteration of Samsung's UX and it also includes additional features and tweaks to ensure the best possible experience out of the box.
 
 It is based on the UN1CA build system which allows automatic downloading/extraction of the firmware, applying the required patches and generating a flashable zip package for the specified target device.
 
-ArtisanROM Aether supports devices using the Exynos 990 SoC
+BenlyROM supports devices using the Exynos 990 SoC
 
 Any form of contribution, suggestions, bug report or feature request for the project will be welcome.
 
 # Features
-### Core features:
-- Based on the latest stable Galaxy S24+ firmware
+    
+Changelog:
+- Fixed 120hz Refresh Rate
+- Airplane mode and uwb SvstemUI crash
+- Spen fixed
+- Fix Lockscreen Video Aspect Ratio Distortion
+- Back to KernelSU-Next version 3.1.0
+- Removed updater app
+- Boot sound added, soft sound
+- Removed lk3rd Bootloader
+- OneUi 8.5 Settings app, Pure Settings App like stock
+- Add UN1CA, Extreme patches to improve experience
+- Update debloat files
+- HEAVILY improved performance, general smoothness, battery and thermals
+- Update signature
+    
+### Core features as ArtisanROM:
+- Based on the latest stable Galaxy S22 firmware
 - EROFS powered
-- Galaxy S26 wallpapers/sounds included
+- Galaxy S25 wallpapers/sounds included
 - Galaxy AI support
   - Audio eraser
   - Browsing assist
@@ -71,11 +86,9 @@ Any form of contribution, suggestions, bug report or feature request for the pro
 
 \* DeX via HDMI not available for devices without USB-C DP support
 
-### ArtisanROM-exclusive features:
-- Integrated OTA updates app
-- Completely upstreamed kernels*
-
 \* Exynos990
+Enable usb file transfer
+*#0808# USB Settings - by this menu, you can change the way your SAMSUNG Galaxy Note20 Ultra 5G will be recognized by PC/Laptop when you are connected with USB cable. Modes like Mass Storage, MPT, ADB, etc.
 
 ### UN1CA-exclusive features:
 - Native/live blur toggle
@@ -102,35 +115,14 @@ This project is licensed under the terms of the [GNU General Public License v3.0
 - [img2sdat](https://github.com/xpirt/img2sdat), licensed under the [MIT License](https://github.com/xpirt/img2sdat/blob/master/LICENSE)
 - [platform_build](https://android.googlesource.com/platform/build/) (ext4_utils, f2fs_utils, signapk), licensed under the [Apache License 2.0](https://source.android.com/docs/setup/about/licenses)
 
-# Disclaimer
-
-```cpp
-#include <std_disclaimer.h>
-
-/*
-* Your warranty is now void.
-*
-* I am not responsible for bricked devices, dead SD cards,
-* thermonuclear war, or you getting fired because the alarm app failed. Please
-* do some research if you have any concerns about doing this to your device
-* YOU are choosing to make these modifications, and if
-* you point the finger at me for messing up your device, I will laugh at you.
-*
-* I am also not responsible for you getting in trouble for using any of the
-* features in this ROM, including but not limited to Call Recording, secure
-* flag removal etc.
-*/
-```
-
-- You are not allowed to modify or redistribute this ROM without prior approval
-
 # Contributors
-<a href="https://github.com/ArtisanROM/ArtisanROM/graphs/contributors"><img loading="lazy" src="https://contrib.rocks/image?repo=ArtisanROM/ArtisanROM"/></a>
+<a href="https://github.com/benly-binh24/BenlyROM/graphs/contributors"><img loading="lazy" src="https://contrib.rocks/image?repo=salvogiangri/UN1CA"/></a>
 
 # Credits:
 - **[salvogiangri](https://github.com/salvogiangri)** for the UN1CA build system, OneUI patches, and general help and support while developing.
 - **[ExtremeXT](https://github.com/ExtremeXT)** for helping me fix bugs and giving me support.
 - **[GhasemzadehFard-Dev](https://github.com/GhasemzadehFard-Dev)** for helping fix many bugs I was not able to fix.
+- **[Binh24](https://github.com/binh24)** for helping fix bugs and build.
 - **[Mesazane](https://github.com/Mesazane)** for testing and helping with the updaters design, and for updating and fixing KernelSU-Next on the Kernels.
 - **[ricci205GTI](https://github.com/ricci205GTI)** for fixing motion photo and help with the x1s.
 - **[immohammeeed](https://github.com/immohammeeed)** for creating the website for this project.
@@ -151,8 +143,3 @@ A special thanks goes to the following for their invaluable contributions in no 
 - **[iDrinkCoffee](https://github.com/iDrinkCoffee-TG)** and **[RisenID](https://github.com/RisenID)** for their support
 - **[LineageOS Team](https://www.lineageos.org/)** for their original [OTA updater implementation](https://github.com/LineageOS/android_packages_apps_Updater)
 - *All the UN1CA project forks, contributors, testers and users ❤️*
-
-# ArtisanROM Archive
-- [ArtisanROM Archive Org](https://github.com/ArtisanROM-archive)
-- [Old Sixteen branch](https://github.com/ArtisanROM-archive/ArtisanROM_old)
-

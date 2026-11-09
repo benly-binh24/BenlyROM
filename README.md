@@ -30,26 +30,10 @@ BenlyROM supports devices using the Exynos 990 SoC
 Any form of contribution, suggestions, bug report or feature request for the project will be welcome.
 
 # Features
-    
-Changelog:
-- Fixed 120hz Refresh Rate
-- Airplane mode and uwb SvstemUI crash
-- Spen fixed
-- Fix Lockscreen Video Aspect Ratio Distortion
-- Back to KernelSU-Next version 3.1.0
-- Removed updater app
-- Boot sound added, soft sound
-- Removed lk3rd Bootloader
-- OneUi 8.5 Settings app, Pure Settings App like stock
-- Add UN1CA, Extreme patches to improve experience
-- Update debloat files
-- HEAVILY improved performance, general smoothness, battery and thermals
-- Update signature
-    
-### Core features as ArtisanROM:
-- Based on the latest stable Galaxy S22 firmware
+### Core features:
+- Based on the latest stable Galaxy S24+ firmware
 - EROFS powered
-- Galaxy S25 wallpapers/sounds included
+- Galaxy S26 wallpapers/sounds included
 - Galaxy AI support
   - Audio eraser
   - Browsing assist
@@ -85,9 +69,11 @@ Changelog:
 
 \* DeX via HDMI not available for devices without USB-C DP support
 
+### ArtisanROM-exclusive features:
+- Integrated OTA updates app
+- Completely upstreamed kernels*
+
 \* Exynos990
-Enable usb file transfer
-*#0808# USB Settings - by this menu, you can change the way your SAMSUNG Galaxy Note20 Ultra 5G will be recognized by PC/Laptop when you are connected with USB cable. Modes like Mass Storage, MPT, ADB, etc.
 
 ### UN1CA-exclusive features:
 - Native/live blur toggle

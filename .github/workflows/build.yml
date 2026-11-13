@@ -58,12 +58,18 @@ jobs:
           DEBIAN_FRONTEND=noninteractive sudo apt install -yq \
             attr ccache clang ffmpeg libbrotli-dev libbz2-dev \
             libgtest-dev libprotobuf-dev libunwind-dev libpcre2-dev \
-            libzstd-dev "linux-modules-extra-${KERNEL_VERSION}" lld protobuf-compiler webp \
+            libzstd-dev lld protobuf-compiler webp \
             build-essential g++-aarch64-linux-gnu gcc-aarch64-linux-gnu python-is-python3 python3 wget
           wget https://raw.githubusercontent.com/kdrag0n/kramflash/refs/heads/master/mkbootimg.py && sudo ln -sf $(pwd)/mkbootimg.py /usr/bin/mkbootimg && chmod +x /usr/bin/mkbootimg
           sudo modprobe erofs f2fs
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          kernel="$(uname -r)"
+          if (( ${kernel%%.*} < 7 )); then
+            sudo apt-get update
+            sudo apt-get install --yes "linux-modules-extra-${kernel}"
+          fi
+          sudo modprobe vcan
           mkdir -p security
           cp -f security/artisanrom_ota.pk8 security/_ota.pk8 2>/dev/null || true
           cp -f security/artisanrom_ota.x509.pem security/_ota.x509.pem 2>/dev/null || true

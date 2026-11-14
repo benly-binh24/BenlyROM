@@ -6,7 +6,7 @@
   <a href="https://github.com/benly-binh24/BenlyROM/commits/sixteen"><img loading="lazy" src="https://img.shields.io/github/last-commit/ArtisanROM/ArtisanROM/sixteen?style=for-the-badge"/></a>
   <a href="https://github.com/benly-binh24/BenlyROM/stargazers"><img loading="lazy" src="https://img.shields.io/github/stars/ArtisanROM/ArtisanROM?style=for-the-badge"/></a>
 </p>
-<p align="center">Now we have 4 OneUI versions 6 * 7 * 8 * 8.5 * 9 Free to experience - Easy to install and use</p>​
+<p align="center">Now we have 5 OneUI versions 6 * 7 * 8 * 8.5 * 9 Free to experience - Easy to install and use</p>​
  <p align="center"> BenlyROM is a work-in-progress custom firmware for Samsung Galaxy devices.</p>
 
 <p align="center">

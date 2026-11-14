@@ -113,7 +113,7 @@ jobs:
         # Cho phép chạy khi trigger thủ công HOẶC khi push code
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
         env:
-          PIXELDRAIN_API_KEY: "97e0067f-7ee5-412b-99e3-b2442c1ebb8d"
+          PIXELDRAIN_API_KEY: ${{ secrets.PD_API }}
           GH_TOKEN: ${{ secrets.PAT }}
           RELEASE_REPO: "ArtisanROM/rom_resources"
           # Nếu không phải workflow_dispatch thì mặc định lấy 'debug'
